@@ -177,6 +177,26 @@ leftpad@~0.0.1:
 				Expect(version).To(Equal(yarnstart.YarnBerry))
 			})
 		})
+
+		context("Berry with node_modules linker", func() {
+			it.Before(func() {
+				yarnrcContent := `yarnPath: .yarn/releases/yarn-berry.cjs
+nodeLinker: node-modules
+`
+				err := os.WriteFile(filepath.Join(workingDir, ".yarnrc.yml"), []byte(yarnrcContent), 0644)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			it("detects Berry with node_modules linker setting", func() {
+				version, err := detector.DetectYarnVersion()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(version).To(Equal(yarnstart.YarnBerry))
+
+				config, err := detector.GetYarnrcConfig()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(config["nodeLinker"]).To(Equal("node-modules"))
+			})
+		})
 	})
 
 	context("GetYarnrcConfig", func() {

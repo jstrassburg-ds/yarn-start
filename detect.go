@@ -49,6 +49,25 @@ func Detect() packit.DetectFunc {
 			return packit.DetectResult{}, packit.Fail.WithMessage(NoStartScriptError)
 		}
 
+		// Determine the appropriate package dependency based on Yarn version and configuration
+		packageDependency := NodeModules // Default to node_modules for Classic
+		
+		if yarnVersion == YarnBerry {
+			// For Berry, check if using node_modules linker or PnP (default)
+			config, err := detector.GetYarnrcConfig()
+			if err != nil {
+				return packit.DetectResult{}, fmt.Errorf("failed to read yarn config: %w", err)
+			}
+			
+			// Check nodeLinker setting - if it's "node-modules", use node_modules, otherwise use yarn_pkgs (PnP)
+			if nodeLinker, ok := config["nodeLinker"]; ok && nodeLinker == "node-modules" {
+				packageDependency = NodeModules
+			} else {
+				// Berry defaults to PnP, so use yarn_pkgs
+				packageDependency = YarnPkgs
+			}
+		}
+
 		requirements := []packit.BuildPlanRequirement{
 			{
 				Name: Node,
@@ -64,7 +83,7 @@ func Detect() packit.DetectFunc {
 				},
 			},
 			{
-				Name: NodeModules,
+				Name: packageDependency,
 				Metadata: map[string]interface{}{
 					"launch": true,
 				},
