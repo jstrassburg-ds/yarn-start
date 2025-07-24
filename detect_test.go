@@ -62,7 +62,8 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 					{
 						Name: "yarn",
 						Metadata: map[string]interface{}{
-							"launch": true,
+							"launch":       true,
+							"yarn-version": "Classic",
 						},
 					},
 					{
@@ -95,7 +96,8 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 					{
 						Name: "yarn",
 						Metadata: map[string]interface{}{
-							"launch": true,
+							"launch":       true,
+							"yarn-version": "Classic",
 						},
 					},
 					{

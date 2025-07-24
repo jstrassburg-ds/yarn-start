@@ -18,6 +18,15 @@ func Build(logger scribe.Emitter) packit.BuildFunc {
 			return packit.BuildResult{}, err
 		}
 
+		// Detect Yarn version (Classic vs Berry)
+		detector := NewYarnDetector(projectPath)
+		yarnVersion, err := detector.DetectYarnVersion()
+		if err != nil {
+			return packit.BuildResult{}, fmt.Errorf("failed to detect yarn version: %w", err)
+		}
+
+		logger.Process("Detected Yarn version: %s", yarnVersion.String())
+
 		pkg, err := libnodejs.ParsePackageJSON(projectPath)
 		if err != nil {
 			return packit.BuildResult{}, err

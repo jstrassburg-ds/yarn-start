@@ -30,6 +30,13 @@ func Detect() packit.DetectFunc {
 			return packit.DetectResult{}, packit.Fail.WithMessage("no 'yarn.lock' found in the project path %s", projectPath)
 		}
 
+		// Detect Yarn version (Classic vs Berry)
+		detector := NewYarnDetector(projectPath)
+		yarnVersion, err := detector.DetectYarnVersion()
+		if err != nil {
+			return packit.DetectResult{}, fmt.Errorf("failed to detect yarn version: %w", err)
+		}
+
 		pkg, err := libnodejs.ParsePackageJSON(projectPath)
 		if err != nil {
 			if os.IsNotExist(err) {
@@ -52,7 +59,8 @@ func Detect() packit.DetectFunc {
 			{
 				Name: Yarn,
 				Metadata: map[string]interface{}{
-					"launch": true,
+					"launch":      true,
+					"yarn-version": yarnVersion.String(),
 				},
 			},
 			{
