@@ -3,20 +3,36 @@
 ## `docker.io/paketobuildpacks/yarn-start`
 
 The Yarn Start CNB sets the start command for the given application. The start
-command is generated from the contents of `package.json`. For example, given a
-`package.json` with the following content:
+command is generated from the contents of `package.json`. This buildpack supports
+both **Yarn Classic (1.x)** and **Yarn Berry (2.x+)**.
+
+## Yarn Version Detection
+
+The buildpack automatically detects which version of Yarn is being used based on:
+
+1. **`.yarnrc.yml` file** - Presence indicates Yarn Berry
+2. **`packageManager` field in `package.json`** - e.g., `"packageManager": "yarn@3.6.0"`  
+3. **`yarn.lock` format** - YAML format indicates Berry, custom format indicates Classic
+4. **Default to Classic** - If no Berry indicators are found
+
+## Start Command Generation
+
+For example, given a `package.json` with the following content:
 
 ```json
 {
   "scripts": {
     "prestart": "<prestart-command>",
-    "poststart": "<poststart-command>",
+    "poststart": "<poststart-command>", 
     "start": "<start-command>"
   }
 }
 ```
 
 The start command will be `<prestart-command> && <start-command> && <poststart-command>`.
+
+Both Yarn Classic and Berry use the same script execution format, so no changes are needed
+in script definitions.
 
 ## Enabling reloadable process types
 

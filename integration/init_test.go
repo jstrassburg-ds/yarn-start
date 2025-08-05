@@ -113,5 +113,6 @@ func TestIntegration(t *testing.T) {
 	suite("GracefulShutdown", testGracefulShutdown)
 	suite("ProjectPath", testProjectPath)
 	suite("Workspaces", testWorkspaces)
+	suite("YarnBerry", testYarnBerry)
 	suite.Run(t)
 }

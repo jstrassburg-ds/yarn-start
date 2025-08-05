@@ -1,0 +1,19 @@
+{
+  "author": "",
+  "dependencies": {
+    "leftpad": "~0.0.1"
+  },
+  "description": "yarn berry app",
+  "license": "MIT",
+  "name": "yarn_berry_app",
+  "packageManager": "yarn@4.0.0",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "version": "0.0.0"
+}

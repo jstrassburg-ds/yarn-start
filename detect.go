@@ -30,6 +30,13 @@ func Detect() packit.DetectFunc {
 			return packit.DetectResult{}, packit.Fail.WithMessage("no 'yarn.lock' found in the project path %s", projectPath)
 		}
 
+		// Detect Yarn version (Classic vs Berry)
+		detector := NewYarnDetector(projectPath)
+		yarnVersion, err := detector.DetectYarnVersion()
+		if err != nil {
+			return packit.DetectResult{}, fmt.Errorf("failed to detect yarn version: %w", err)
+		}
+
 		pkg, err := libnodejs.ParsePackageJSON(projectPath)
 		if err != nil {
 			if os.IsNotExist(err) {
@@ -42,6 +49,25 @@ func Detect() packit.DetectFunc {
 			return packit.DetectResult{}, packit.Fail.WithMessage(NoStartScriptError)
 		}
 
+		// Determine the appropriate package dependency based on Yarn version and configuration
+		packageDependency := NodeModules // Default to node_modules for Classic
+
+		if yarnVersion == YarnBerry {
+			// For Berry, check if using node_modules linker or PnP (default)
+			config, err := detector.GetYarnrcConfig()
+			if err != nil {
+				return packit.DetectResult{}, fmt.Errorf("failed to read yarn config: %w", err)
+			}
+
+			// Check nodeLinker setting - if it's "node-modules", use node_modules, otherwise use yarn_pkgs (PnP)
+			if nodeLinker, ok := config["nodeLinker"]; ok && nodeLinker == "node-modules" {
+				packageDependency = NodeModules
+			} else {
+				// Berry defaults to PnP, so use yarn_pkgs
+				packageDependency = YarnPkgs
+			}
+		}
+
 		requirements := []packit.BuildPlanRequirement{
 			{
 				Name: Node,
@@ -52,11 +78,12 @@ func Detect() packit.DetectFunc {
 			{
 				Name: Yarn,
 				Metadata: map[string]interface{}{
-					"launch": true,
+					"launch":       true,
+					"yarn-version": yarnVersion.String(),
 				},
 			},
 			{
-				Name: NodeModules,
+				Name: packageDependency,
 				Metadata: map[string]interface{}{
 					"launch": true,
 				},
@@ -94,4 +121,22 @@ func checkLiveReloadEnabled() (bool, error) {
 		return shouldEnableReload, nil
 	}
 	return false, nil
+}
+
+// isStaticServing checks if the build is intended for static file serving via nginx
+func isStaticServing() bool {
+	webServer := os.Getenv("BP_WEB_SERVER")
+	webServerRoot := os.Getenv("BP_WEB_SERVER_ROOT")
+
+	// If BP_WEB_SERVER is set to nginx, this indicates static serving
+	if webServer == "nginx" {
+		return true
+	}
+
+	// If BP_WEB_SERVER_ROOT is set, this also indicates static serving
+	if webServerRoot != "" {
+		return true
+	}
+
+	return false
 }
