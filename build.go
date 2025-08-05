@@ -13,6 +13,12 @@ func Build(logger scribe.Emitter) packit.BuildFunc {
 	return func(context packit.BuildContext) (packit.BuildResult, error) {
 		logger.Title("%s %s", context.BuildpackInfo.Name, context.BuildpackInfo.Version)
 
+		// Check for static serving indicators - skip setting start command if nginx will handle serving
+		if isStaticServing() {
+			logger.Process("Static serving detected (BP_WEB_SERVER=nginx), skipping yarn start command setup")
+			return packit.BuildResult{}, nil
+		}
+
 		projectPath, err := libnodejs.FindProjectPath(context.WorkingDir)
 		if err != nil {
 			return packit.BuildResult{}, err

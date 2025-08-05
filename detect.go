@@ -51,14 +51,14 @@ func Detect() packit.DetectFunc {
 
 		// Determine the appropriate package dependency based on Yarn version and configuration
 		packageDependency := NodeModules // Default to node_modules for Classic
-		
+
 		if yarnVersion == YarnBerry {
 			// For Berry, check if using node_modules linker or PnP (default)
 			config, err := detector.GetYarnrcConfig()
 			if err != nil {
 				return packit.DetectResult{}, fmt.Errorf("failed to read yarn config: %w", err)
 			}
-			
+
 			// Check nodeLinker setting - if it's "node-modules", use node_modules, otherwise use yarn_pkgs (PnP)
 			if nodeLinker, ok := config["nodeLinker"]; ok && nodeLinker == "node-modules" {
 				packageDependency = NodeModules
@@ -78,7 +78,7 @@ func Detect() packit.DetectFunc {
 			{
 				Name: Yarn,
 				Metadata: map[string]interface{}{
-					"launch":      true,
+					"launch":       true,
 					"yarn-version": yarnVersion.String(),
 				},
 			},
@@ -121,4 +121,22 @@ func checkLiveReloadEnabled() (bool, error) {
 		return shouldEnableReload, nil
 	}
 	return false, nil
+}
+
+// isStaticServing checks if the build is intended for static file serving via nginx
+func isStaticServing() bool {
+	webServer := os.Getenv("BP_WEB_SERVER")
+	webServerRoot := os.Getenv("BP_WEB_SERVER_ROOT")
+
+	// If BP_WEB_SERVER is set to nginx, this indicates static serving
+	if webServer == "nginx" {
+		return true
+	}
+
+	// If BP_WEB_SERVER_ROOT is set, this also indicates static serving
+	if webServerRoot != "" {
+		return true
+	}
+
+	return false
 }
